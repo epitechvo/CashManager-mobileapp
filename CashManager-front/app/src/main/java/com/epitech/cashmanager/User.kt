@@ -5,19 +5,16 @@ import android.os.Parcelable
 
 data class User(
     var username: String = "",
-    var password: String = "",
-    var cart: Array<Product> = arrayOf()
+    var cart: Array<cartProduct> = arrayOf()
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
-        parcel.readString(),
-        parcel.createTypedArray(Product)
+        parcel.createTypedArray(cartProduct)
     ) {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(username)
-        parcel.writeString(password)
         parcel.writeTypedArray(cart, flags)
     }
 
@@ -34,5 +31,6 @@ data class User(
             return arrayOfNulls(size)
         }
     }
+
 
 }

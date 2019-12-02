@@ -1,22 +1,27 @@
 package com.epitech.cashmanager
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+
 import android.view.*
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.epitech.cashmanager.utils.*
+import com.google.android.material.button.MaterialButton
 
 lateinit var productAdapter: ProductAdapter
 lateinit var cartAdapter: CartAdapter
 lateinit var products: ArrayList<Product>
 lateinit var user: User
-lateinit var cart: MutableList<Product>
+lateinit var cart: MutableList<cartProduct>
 lateinit var dialogView: View
 lateinit var recyclerView: RecyclerView
+
 
 class ProductListActivity : AppCompatActivity(), View.OnClickListener{
 
@@ -49,21 +54,32 @@ class ProductListActivity : AppCompatActivity(), View.OnClickListener{
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.action_show_cart -> {
+                val tmp = getCart()
+                cart.clear()
+                cart.addAll(tmp)
                 showCart(cart)
+                return true
+            }
+            R.id.action_logout -> {
+                val intent = Intent(this, LoginActivity::class.java)
+                disconnect()
+                finishAffinity()
+                startActivity(intent)
                 return true
             }
             else -> return super.onOptionsItemSelected(item)
         }
     }
 
-    private fun showCart(products: List<Product>) {
-        dialogView = LayoutInflater.from(this).inflate(R.layout.cart_products, null)
+    private fun showCart(products: List<cartProduct>) {
+        dialogView = LayoutInflater.from(this).inflate(R.layout.activity_cart, null)
         recyclerView = dialogView.findViewById<RecyclerView>(R.id.cart_recycler_view)
-        cartAdapter = CartAdapter(products, this)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = cartAdapter
 
         countTotal(products)
+        dialogView.findViewById<Button>(R.id.pay).setOnClickListener { payActivityLaunch(dialogView.findViewById<TextView>(R.id.total).text.toString().toFloat()) }
+        dialogView.findViewById<MaterialButton>(R.id.clear_cart).setOnClickListener {  clearCart()  }
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -71,16 +87,38 @@ class ProductListActivity : AppCompatActivity(), View.OnClickListener{
         val alertDialog = builder.show()
     }
 
+    private fun clearCart() {
+        val tmp = clearAll()
+        cart.clear()
+        cart.addAll(tmp)
+        cartAdapter.notifyDataSetChanged()
+        countTotal(cart)
+    }
+
+    private fun payActivityLaunch(total: Float) {
+        if(cart.size > 0) {
+            val intent = Intent(this, PaymentActivity::class.java)
+            intent.putExtra("Total", total)
+            startActivity(intent)
+        }
+
+    }
+
     override fun onClick(view: View) {
         when(view.id) {
             R.id.item -> {
-                cart.add(products[view.tag as Int])
-                user.cart = cart.toTypedArray()
-
+                var productToAdd = products[view.tag as Int].title
+                addProduct(productToAdd)
+                val tmp = getCart()
+                cart.clear()
+                cart.addAll(tmp)
             }
             R.id.item_cart -> {
-                cart.removeAt(view.tag as Int)
-                user.cart = cart.toTypedArray()
+                var productToRemove = cart[view.tag as Int].product.title
+                removeProduct(productToRemove)
+                val tmp = getCart()
+                cart.clear()
+                cart.addAll(tmp)
                 countTotal(cart)
             }
         }
@@ -88,11 +126,12 @@ class ProductListActivity : AppCompatActivity(), View.OnClickListener{
 
     }
 
-    private fun countTotal(products: List<Product>) {
+    private fun countTotal(products: List<cartProduct>) {
         val total = dialogView.findViewById<TextView>(R.id.total)
         var totalF = 0F
         for (product in products) {
-            totalF += product.price
+            var totalProduct = product.product.price * product.quantity
+            totalF += totalProduct
         }
         total.text = totalF.toString()
     }

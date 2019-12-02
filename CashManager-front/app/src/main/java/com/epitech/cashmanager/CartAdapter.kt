@@ -3,18 +3,21 @@ package com.epitech.cashmanager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 
 class CartAdapter(
-    val cart : List<Product>,
+    val cart : List<cartProduct>,
     val itemOnClickListener: View.OnClickListener
 ) : RecyclerView.Adapter<CartAdapter.ViewHolder>(){
+
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardView = itemView.findViewById<CardView>(R.id.item_cart)
         val titleView = cardView.findViewById<TextView>(R.id.title)
+        val qteView = cardView.findViewById<TextView>(R.id.quantity)
         val priceView = cardView.findViewById<TextView>(R.id.price)
     }
 
@@ -28,8 +31,9 @@ class CartAdapter(
         val product = cart[position]
         holder.cardView.setOnClickListener(itemOnClickListener)
         holder.cardView.tag = position
-        holder.titleView.text = product.title
-        holder.priceView.text = product.price.toString()
+        holder.qteView.text = product.quantity.toString()
+        holder.titleView.text = product.product.title
+        holder.priceView.text = product.product.price.toString()
     }
 
     override fun getItemCount(): Int {
